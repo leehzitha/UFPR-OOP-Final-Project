@@ -15,5 +15,9 @@ public abstract class Forma {
     public Forma(double dimensao){
         this.dimensao = dimensao;
     };
+    
+    public double getDimensao() {
+        return this.dimensao;
+    }
     public abstract double getArea();
 }

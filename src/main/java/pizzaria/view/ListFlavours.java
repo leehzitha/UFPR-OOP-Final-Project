@@ -1,32 +1,48 @@
 package pizzaria.view;
 
-import pizzaria.model.Flavour;
-import java.util.ArrayList;
-import javax.swing.JOptionPane;
-import javax.swing.table.DefaultTableModel;
-import pizzaria.Pizzaria;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 
 /**
- * @author eduardo
- * @author Vinicius Dias
+ *
+ * @author dias
  */
+
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import pizzaria.controller.FlavourController;
+import pizzaria.model.Flavour;
+import pizzaria.view.SignupFlavour;
+
 public class ListFlavours extends javax.swing.JPanel {
 
+    private final FlavourController flavourController;
     private DefaultTableModel tableModel;
-    private ArrayList<Flavour> flavourList;
-    private Pizzaria sistema;
+    private List<Flavour> flavourList;
+    private List<Flavour> displayedFlavours;
     private javax.swing.JPanel lastScreen;
-    
-    public ListFlavours(Pizzaria sistema, javax.swing.JPanel lastScreen) {
+
+    public ListFlavours(FlavourController flavourController, javax.swing.JPanel lastScreen) {
+        this.flavourController = flavourController;
         this.lastScreen = lastScreen;
         initComponents();
-        this.sistema = sistema;
-        this.flavourList = this.sistema.getFlavoursList();
         this.tableModel = (DefaultTableModel) jTable1.getModel();
+
+        loadFlavours();
+    }
+
+    public void loadFlavours() {
+        this.flavourList = this.flavourController.getAllFlavours();
         updateTable(this.flavourList);
     }
 
-    private void updateTable(ArrayList<Flavour> listToShow) {
+    private void updateTable(List<Flavour> listToShow) {
+        this.displayedFlavours = listToShow;
         tableModel.setNumRows(0);
         for (Flavour f : listToShow) {
             tableModel.addRow(new Object[]{
@@ -140,20 +156,26 @@ public class ListFlavours extends javax.swing.JPanel {
                 .addContainerGap(23, Short.MAX_VALUE))
         );
     }
-    
+
     // Busca por nome
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         String search = jTextField1.getText().toLowerCase().trim();
-        if (search.isEmpty()) { updateTable(flavourList); return; }
-        ArrayList<Flavour> filtered = new ArrayList<>();
-        for (Flavour f : flavourList)
-            if (f.getName().toLowerCase().contains(search)) filtered.add(f);
+        if (search.isEmpty()) {
+            updateTable(flavourList);
+            return;
+        }
+        List<Flavour> filtered = new ArrayList<>();
+        for (Flavour f : flavourList) {
+            if (f.getName().toLowerCase().contains(search)) {
+                filtered.add(f);
+            }
+        }
         updateTable(filtered);
     }
 
     // Adicionar novo sabor
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {
-        SignupFlavour tela = new SignupFlavour(flavourList, -1, this, this.sistema);
+        SignupFlavour tela = new SignupFlavour(this.flavourController, null, this);
         javax.swing.JFrame janela = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         janela.setContentPane(tela);
         janela.revalidate();
@@ -164,13 +186,17 @@ public class ListFlavours extends javax.swing.JPanel {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
         int row = jTable1.getSelectedRow();
         if (row >= 0) {
+            Flavour selectedFlavour = this.displayedFlavours.get(row);
             int resp = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir esse sabor?", "Confirmação",
-                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                "Tem certeza que deseja excluir o sabor " + selectedFlavour.getName() + "?",
+                "Confirmação",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
             if (resp == JOptionPane.YES_OPTION) {
-                flavourList.remove(row);
-                tableModel.removeRow(row);
-                JOptionPane.showMessageDialog(this, "Sabor excluído com sucesso!");
+                if (this.flavourController.deleteFlavour(selectedFlavour)) {
+                    jTextField1.setText("");
+                    loadFlavours();
+                }
             }
         } else {
             JOptionPane.showMessageDialog(this,
@@ -182,7 +208,8 @@ public class ListFlavours extends javax.swing.JPanel {
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
         int row = jTable1.getSelectedRow();
         if (row >= 0) {
-            SignupFlavour tela = new SignupFlavour(flavourList, row, this, this.sistema);
+            Flavour selectedFlavour = this.displayedFlavours.get(row);
+            SignupFlavour tela = new SignupFlavour(this.flavourController, selectedFlavour, this);
             javax.swing.JFrame janela = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
             janela.setContentPane(tela);
             janela.revalidate();
@@ -206,7 +233,6 @@ public class ListFlavours extends javax.swing.JPanel {
         }
     }
 
-    
     private javax.swing.JButton jButton1, jButton2, jButton3, jButton4, btnVoltar;
     private javax.swing.JLabel jLabel1, jLabel2;
     private javax.swing.JScrollPane jScrollPane1;

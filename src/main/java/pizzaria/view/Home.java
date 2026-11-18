@@ -4,7 +4,10 @@
  */
 package pizzaria.view;
 
-import pizzaria.Pizzaria;
+import pizzaria.controller.ClientController;
+import pizzaria.controller.FlavourController;
+import pizzaria.controller.OrderController;
+import pizzaria.controller.PriceTableController;
 
 /**
  *
@@ -12,13 +15,20 @@ import pizzaria.Pizzaria;
  */
 public class Home extends javax.swing.JPanel {
 
-    private Pizzaria sistema;
+    private ClientController clientController;
+    private FlavourController flavourController;
+    private OrderController orderController;
+    private PriceTableController priceTableController;
     /**
      * Creates new form Home
      */
-    public Home(Pizzaria sistema) {
+    public Home(ClientController clientController, FlavourController flavourController, OrderController orderController, PriceTableController priceTableController) {
         initComponents();
-        this.sistema = sistema;
+        
+        this.clientController = clientController;
+        this.flavourController = flavourController;
+        this.orderController = orderController;
+        this.priceTableController = priceTableController;
     }
 
     /**
@@ -127,7 +137,7 @@ public class Home extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        ListClient telaLista = new ListClient(this.sistema);
+        ListClient telaLista = new ListClient(this.clientController, this.flavourController, this.orderController, this.priceTableController);
         javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         mainScreen.setContentPane(telaLista);
         mainScreen.revalidate();
@@ -135,7 +145,7 @@ public class Home extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        SignupFlavour cadastroSabores = new SignupFlavour(this.sistema.getFlavoursList(), -1, this, this.sistema);
+        SignupFlavour cadastroSabores = new SignupFlavour(this.flavourController, null, this);
         javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         mainScreen.setContentPane(cadastroSabores);
         mainScreen.revalidate();
@@ -143,7 +153,7 @@ public class Home extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        ListClient telaLista = new ListClient(this.sistema);
+        ListClient telaLista = new ListClient(this.clientController, this.flavourController, this.orderController, this.priceTableController);
         javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         mainScreen.setContentPane(telaLista);
         mainScreen.revalidate();
@@ -151,7 +161,7 @@ public class Home extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        ListOrders tela = new ListOrders(this , this.sistema);
+        ListOrders tela = new ListOrders(this, this.clientController, this.flavourController, this.orderController, this.priceTableController);
         javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         mainScreen.setContentPane(tela);
         mainScreen.revalidate();
@@ -159,7 +169,7 @@ public class Home extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        ListFlavours tela = new ListFlavours(this.sistema, this);
+        ListFlavours tela = new ListFlavours(this.flavourController, this);
         javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         mainScreen.setContentPane(tela);
         mainScreen.revalidate();
@@ -167,7 +177,7 @@ public class Home extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        SignupClient signupScreen = new SignupClient(this.sistema, -1, this); //-1 é para cadastro de cliente e this é referente ao painel atual
+        SignupClient signupScreen = new SignupClient(this.clientController, this.flavourController, this.orderController, this.priceTableController, null,this);
         javax.swing.JFrame janelaPrincipal = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         janelaPrincipal.setContentPane(signupScreen);
         janelaPrincipal.revalidate();
@@ -175,7 +185,7 @@ public class Home extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        ConfigPrice telaConfig = new ConfigPrice(this.sistema, this);
+        ConfigPrice telaConfig = new ConfigPrice(this.priceTableController, this);
         javax.swing.JFrame janelaPrincipal = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         janelaPrincipal.setContentPane(telaConfig);
         janelaPrincipal.revalidate();

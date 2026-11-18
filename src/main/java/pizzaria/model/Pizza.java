@@ -17,6 +17,7 @@ import pizzaria.model.PriceTable;
  */
 public class Pizza {
     
+    private Long id;
     private Forma forma;
 
     public Forma getForma() {
@@ -71,6 +72,10 @@ public class Pizza {
         if (qtde == 0)
             return 0;
         return qtde;
+    }
+    
+    public Flavour[] getFlavours() {
+       return this.flavours;
     }
     
     public void setForma(Forma forma) {

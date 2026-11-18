@@ -8,7 +8,7 @@ import java.util.Arrays;
  * @author letic
  */
 public class Order {
-    private int id;
+    private Long id;
     private Client client;
     private ArrayList<Pizza> pizzas = new ArrayList<>();
     private double subtotal = 0.0;
@@ -22,13 +22,13 @@ public class Order {
         this.subtotal = subtotal;
     }
     
-    public Order(Client client, ArrayList<Pizza> pizzas, double subtotal, int id){
+    public Order(Client client, ArrayList<Pizza> pizzas, double subtotal, Long id){
         this.client = client;
         this.id = id;
         this.pizzas = new ArrayList<>(pizzas);
         this.subtotal = subtotal;
         this.orderStatus = "ABERTO";
-        client.newOrder(this);
+        client.addOrder(this);
     }
     
     public String getOrderStatus() {
@@ -49,9 +49,14 @@ public class Order {
         this.subtotal += pizza.getPrice(priceTable);
     }
     
-    public int getId(){
+    public Long getId(){
         return this.id;
     }
+
+    public void setId(Long id){
+        this.id = id;
+    }
+
     
     public Client getClient(){
         return this.client;

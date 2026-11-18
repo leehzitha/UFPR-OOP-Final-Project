@@ -2,9 +2,9 @@ package pizzaria.view;
 
 import pizzaria.model.Flavour;
 import pizzaria.model.PizzaType;
-import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JOptionPane;
-import pizzaria.Pizzaria;
+import pizzaria.controller.FlavourController;
 
 /**
  * @author eduardo
@@ -12,17 +12,15 @@ import pizzaria.Pizzaria;
  */
 public class SignupFlavour extends javax.swing.JPanel {
 
-    private ArrayList<Flavour> flavourList;
-    private int flavourIndex;
+    private final FlavourController flavourController;
+    private Flavour flavourToEdit;
     private javax.swing.JPanel lastScreen;
-    private Pizzaria sistema;
 
-    public SignupFlavour(ArrayList<Flavour> flavourList, int flavourIndex, javax.swing.JPanel lastScreen, Pizzaria sistema) {
+    public SignupFlavour(FlavourController flavourController, Flavour flavourToEdit, javax.swing.JPanel lastScreen) {
         initComponents();
-        this.flavourList = flavourList;
-        this.flavourIndex = flavourIndex;
+        this.flavourController = flavourController;
+        this.flavourToEdit = flavourToEdit;
         this.lastScreen = lastScreen;
-        this.sistema = sistema;
 
         // Preenche o ComboBox com os tipos disponíveis
         jComboBox1.removeAllItems();
@@ -31,10 +29,9 @@ public class SignupFlavour extends javax.swing.JPanel {
         }
 
         // Se for edição, preenche os campos
-        if (this.flavourIndex != -1) {
-            Flavour f = this.flavourList.get(flavourIndex);
-            jTextField1.setText(f.getName());
-            jComboBox1.setSelectedItem(f.getType().name());
+        if (this.flavourToEdit != null) {
+            jTextField1.setText(flavourToEdit.getName());
+            jComboBox1.setSelectedItem(flavourToEdit.getType().name());
             jLabel4.setText("Edição de Sabor");
             jButton3.setText("Atualizar");
         }
@@ -127,7 +124,7 @@ public class SignupFlavour extends javax.swing.JPanel {
             javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
             mainScreen.setContentPane(this.lastScreen);
             mainScreen.revalidate();
-           mainScreen.repaint();
+            mainScreen.repaint();
         } else {
             jTextField1.setText("");
             jComboBox1.setSelectedIndex(0);
@@ -144,9 +141,11 @@ public class SignupFlavour extends javax.swing.JPanel {
             return;
         }
 
-        // Verifica nome duplicado (ignora o próprio em caso de edição)
-        for (int i = 0; i < flavourList.size(); i++) {
-            if (i != flavourIndex && flavourList.get(i).getName().equalsIgnoreCase(name)) {
+        // Verifica nome duplicado no banco (ignora o próprio registro em caso de edição)
+        List<Flavour> existingFlavours = flavourController.getAllFlavours();
+        for (Flavour f : existingFlavours) {
+            boolean isSameRecord = (flavourToEdit != null && f.getId() != null && f.getId().equals(flavourToEdit.getId()));
+            if (!isSameRecord && f.getName().equalsIgnoreCase(name)) {
                 JOptionPane.showMessageDialog(this,
                     "Já existe um sabor com esse nome. Escolha outro nome.", "Erro", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -155,31 +154,27 @@ public class SignupFlavour extends javax.swing.JPanel {
 
         PizzaType selectedType = PizzaType.valueOf((String) jComboBox1.getSelectedItem());
 
-        if (this.flavourIndex == -1) {
-            // Novo cadastro
-            this.flavourList.add(new Flavour(selectedType, name));
-            JOptionPane.showMessageDialog(this, "Sabor \"" + name + "\" cadastrado com sucesso!");
-            jTextField1.setText("");
-            jComboBox1.setSelectedIndex(0);
+        if (this.flavourToEdit == null) {
+            boolean created = flavourController.createFlavour(selectedType, name);
+            if (created) {
+                jTextField1.setText("");
+                jComboBox1.setSelectedIndex(0);
+            }
         } else {
-            // Edição
-            Flavour f = this.flavourList.get(flavourIndex);
-            f.setName(name);
-            f.setType(selectedType);
-            JOptionPane.showMessageDialog(this, "Sabor \"" + name + "\" atualizado com sucesso!");
-            flavourListScreen();
+            boolean updated = flavourController.updateFlavour(flavourToEdit.getId(), selectedType, name);
+            if (updated) {
+                flavourListScreen();
+            }
         }
-
-        System.out.println("Total de sabores: " + flavourList.size());
     }
-    
+
     // Ver Sabores: navega para a listagem
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
         flavourListScreen();
     }
 
     private void flavourListScreen() {
-        ListFlavours tela = new ListFlavours(this.sistema, this);
+        ListFlavours tela = new ListFlavours(this.flavourController, this.lastScreen != null ? this.lastScreen : this);
         javax.swing.JFrame mainScreen = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         mainScreen.setContentPane(tela);
         mainScreen.revalidate();

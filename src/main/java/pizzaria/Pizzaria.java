@@ -4,13 +4,18 @@
 
 package pizzaria;
 import java.util.ArrayList;
-import pizzaria.model.Pizza;
-import pizzaria.model.Client;
-import pizzaria.model.Order;
-import pizzaria.model.PriceTable;
-import java.util.NoSuchElementException;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import pizzaria.controller.ClientController;
+import pizzaria.controller.FlavourController;
+import pizzaria.controller.OrderController;
+import pizzaria.controller.PriceTableController;
+import pizzaria.model.Client;
 import pizzaria.model.Flavour;
+import pizzaria.model.Order;
+import pizzaria.model.Pizza;
+import pizzaria.model.PriceTable;
+import pizzaria.model.dao.DatabaseMigration;
 import pizzaria.view.Home;
 
 /**
@@ -19,105 +24,97 @@ import pizzaria.view.Home;
  * @author Vinicius Dias
  */
 public class Pizzaria {
-    private ArrayList<Order> orders;
-    private ArrayList<Client> clients;
-    private PriceTable priceTable;
-    private ArrayList<Flavour> flavoursList;
 
-    public Pizzaria(){
-        this.orders = new ArrayList<>();
-        this.clients = new ArrayList<>();
-        this.priceTable = new PriceTable();
-        this.flavoursList = new ArrayList<>();
+
+    private final ClientController clientController;
+    private final FlavourController flavourController;
+    private final OrderController orderController;
+    private final PriceTableController priceTableController;
+
+    public Pizzaria() {
+        this.clientController = new ClientController();
+        this.flavourController = new FlavourController();
+        this.orderController = new OrderController();
+        this.priceTableController = new PriceTableController();
     }
     
+    public ClientController getClientController() {
+        return clientController;
+    }
+
+    public FlavourController getFlavourController() {
+        return flavourController;
+    }
+
+    public OrderController getOrderController() {
+        return orderController;
+    }
+
+    public PriceTableController getPriceTableController() {
+        return priceTableController;
+    }
+
+    // --- Métodos delegados aos Controllers (mantém todas as Views funcionando) ---
     public ArrayList<Client> getClients() {
-        return clients;
+        return new ArrayList<>(clientController.getAllClients());
     }
 
     public ArrayList<Order> getOrdersList() {
-        return orders;
+        return new ArrayList<>(orderController.getAllOrders());
     }
 
     public PriceTable getPriceTable() {
-        return priceTable;
-    }
-    
-    public ArrayList<Flavour> getFlavoursList(){
-        return flavoursList;
+        return priceTableController.getPriceTable();
     }
 
-    public void newOrder(Client client, ArrayList<Pizza> pizzas, double subtotal){
-        if (!clients.contains(client)) {
-            throw new NoSuchElementException("Cliente inexistente");
-        }
-        int id = orders.size(); //id sequencial
-        Order order = new Order(client, pizzas, subtotal, id);
-        
-        this.orders.add(order);
+    public ArrayList<Flavour> getFlavoursList() {
+        return new ArrayList<>(flavourController.getAllFlavours());
     }
 
-    public void cancelOrder(Order order){
-        if (!orders.contains(order)){
-            throw new NoSuchElementException("Order not found");
-        }
-        orders.remove(order);
+    public void newOrder(Client client, ArrayList<Pizza> pizzas, double subtotal) {
+        orderController.createOrder(client, pizzas);
     }
 
-    public String getOrdersToStr(){
-        String result = "";
-        for (Order order : this.orders) {
-            result += order.getId() + "  "
-                    +  order.getClient().getName() + "  "
-                    + order.getPrice(this.priceTable);
-        }
-        return result;
+    public void cancelOrder(Order order) {
+        orderController.cancelOrder(order);
     }
-    
+
     public Client findClientByTelephone(String telephone) {
-        for (Client c : clients) {
-            if (c.getTelephone().equals(telephone.trim())) {
-                return c;
-            }
-        }
-        return null;
+        return clientController.findClientByTelephone(telephone);
     }
-    
+
     public Order findActiveOrderByClient(Client client) {
-        for (Order o : orders) {
-            if (o.getClient().equals(client) && o.getOrderStatus().equalsIgnoreCase("ABERTO")) {
-                return o;
-            }
-        }
-        return null;
+        return orderController.findActiveOrderByClient(client);
     }
-    
+
     public void deleteClientWithOrders(Client client) {
-        //rem todos os pedidos que pertencem ao cliente
-        orders.removeIf(order -> order.getClient().equals(client));
-        clients.remove(client);
+        clientController.deleteClient(client);
+    }
+
+    public void deleteFlavour(Flavour flavour) {
+        flavourController.deleteFlavour(flavour);
     }
     
-    public void deleteFlavour(Flavour flavour) {
-        if (flavour == null || flavour.getName() == null) {
+    public static void main(String[] args) {
+        try {
+            DatabaseMigration.migrate();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Database initialization error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        this.flavoursList.removeIf(f -> f.getName().equalsIgnoreCase(flavour.getName().trim()));
-    }
 
-    public static void main(String[] args) {
-        Pizzaria pizzaria = new Pizzaria();
+        ClientController clientController = new ClientController();
+        FlavourController flavourController = new FlavourController();
+        OrderController orderController = new OrderController();
+        PriceTableController priceTableController = new PriceTableController();
+
         JFrame screen = new JFrame("Pizzaria - Sistema de Cadastro");
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         screen.setSize(800, 600);
         screen.setLocationRelativeTo(null);
 
-        Home telaHome = new Home(pizzaria);
-//        SignupClient telaCadastro = new SignupClient( pizzaria , -1, null); // -1 == cadastro de cliente;
-//        screen.add(telaCadastro);
-        screen.add(telaHome);
+        Home homeScreen = new Home(clientController, flavourController, orderController, priceTableController);
+        screen.add(homeScreen);
         screen.setVisible(true);
     }
-
-
 }

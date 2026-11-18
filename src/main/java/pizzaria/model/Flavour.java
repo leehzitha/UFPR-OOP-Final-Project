@@ -10,12 +10,22 @@ package pizzaria.model;
  * @author letic
  */
 public class Flavour {
+    private Long id;
+
     private PizzaType pizzaType;
     private String name;
     
     public Flavour(PizzaType pizzaType, String name){
         this.pizzaType = pizzaType;
         this.name = name;
+    }
+    
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
     
     public void setType(PizzaType pizzaType) {

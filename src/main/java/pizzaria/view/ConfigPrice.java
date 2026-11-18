@@ -1,16 +1,29 @@
 package pizzaria.view;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+/**
+ *
+ * @author dias
+ */
 
 import javax.swing.JOptionPane;
-import pizzaria.Pizzaria;
+import pizzaria.controller.PriceTableController;
 import pizzaria.model.PizzaType;
+import static pizzaria.model.PizzaType.Premium;
+import static pizzaria.model.PizzaType.Simple;
+import static pizzaria.model.PizzaType.Special;
+import pizzaria.model.PriceTable;
 
 public class ConfigPrice extends javax.swing.JPanel {
 
-    private Pizzaria sistema;
+    private final PriceTableController priceTableController;
     private javax.swing.JPanel lastScreen;
 
-    public ConfigPrice(Pizzaria sistema, javax.swing.JPanel lastScreen) {
-        this.sistema = sistema;
+    public ConfigPrice(PriceTableController priceTableController, javax.swing.JPanel lastScreen) {
+        this.priceTableController = priceTableController;
         this.lastScreen = lastScreen;
         initComponents();
         carregarPrecoAtual();
@@ -25,22 +38,20 @@ public class ConfigPrice extends javax.swing.JPanel {
         jButtonSalvar = new javax.swing.JButton("Salvar Alteração");
         jButtonVoltar = new javax.swing.JButton("Voltar");
 
-
         jComboBoxType.addActionListener(evt -> carregarPrecoAtual());
 
         jButtonSalvar.addActionListener(evt -> {
             try {
                 PizzaType tipoSelecionado = (PizzaType) jComboBoxType.getSelectedItem();
                 double novoPreco = Double.parseDouble(jTextFieldPrice.getText().replace(",", "."));
-                
-                if (novoPreco < 0) {
-                    JOptionPane.showMessageDialog(this, "O preço não pode ser negativo.", "Erro", JOptionPane.ERROR_MESSAGE);
+
+                if (novoPreco <= 0) {
+                    JOptionPane.showMessageDialog(this, "O preço deve ser maior que zero.", "Erro", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                sistema.getPriceTable().updatePrice(tipoSelecionado, novoPreco);
-                JOptionPane.showMessageDialog(this, "Preço do tipo " + tipoSelecionado + " atualizado com sucesso!");
-                
+                priceTableController.updatePrice(tipoSelecionado, novoPreco);
+
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Insira um valor numérico válido.", "Erro", JOptionPane.ERROR_MESSAGE);
             }
@@ -65,19 +76,21 @@ public class ConfigPrice extends javax.swing.JPanel {
         add(jButtonVoltar);
     }
 
-
     private void carregarPrecoAtual() {
         PizzaType tipoSelecionado = (PizzaType) jComboBoxType.getSelectedItem();
-        double precoAtual = 0;
         if (tipoSelecionado != null) {
+            PriceTable priceTable = priceTableController.getPriceTable();
+            double precoAtual = 0;
+
             switch (tipoSelecionado) {
-                case Simple -> precoAtual = sistema.getPriceTable().getSimplePriceBase();
-                case Special -> precoAtual = sistema.getPriceTable().getSpecialPriceBase();
-                case Premium -> precoAtual = sistema.getPriceTable().getPremiumPriceBase();
+                case Simple -> precoAtual = priceTable.getSimplePriceBase();
+                case Special -> precoAtual = priceTable.getSpecialPriceBase();
+                case Premium -> precoAtual = priceTable.getPremiumPriceBase();
             }
             jTextFieldPrice.setText(String.format("%.2f", precoAtual));
         }
     }
+
     private javax.swing.JButton jButtonSalvar;
     private javax.swing.JButton jButtonVoltar;
     private javax.swing.JComboBox<PizzaType> jComboBoxType;

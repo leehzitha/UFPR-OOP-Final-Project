@@ -1,92 +1,103 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package pizzaria.view;
 
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import pizzaria.Pizzaria;
+import pizzaria.controller.ClientController;
+import pizzaria.controller.FlavourController;
+import pizzaria.controller.OrderController;
+import pizzaria.controller.PriceTableController;
 import pizzaria.forma.Circle;
+import pizzaria.forma.Forma;
 import pizzaria.forma.Square;
 import pizzaria.forma.Triangle;
 import pizzaria.model.Client;
 import pizzaria.model.Flavour;
 import pizzaria.model.Pizza;
-import pizzaria.model.Order;
 import pizzaria.model.PriceTable;
 
 /**
  *
- * @author Vinicius Dias
+ * @author dias
  */
-public class ListAvaliableFlavors extends javax.swing.JPanel {
+public class ListAvaliableFlavours extends javax.swing.JPanel {
+
+    private final ClientController clientController;
+    private final FlavourController flavourController;
+    private final OrderController orderController;
+    private final PriceTableController priceTableController;
 
     private javax.swing.JPanel lastScreen;
-    private String SelectedFormat;
+    private String selectedFormat;
     private Client selectedClient;
-    private Pizzaria sistema;
     private Double orderArea;
-    private pizzaria.forma.Forma formaInstanciada;
+    private Forma formaInstanciada;
     private DefaultTableModel tableModelSabores;
+    private List<Flavour> availableFlavours = new ArrayList<>();
     private ArrayList<Flavour> saboresSelecionados = new ArrayList<>();
     private DefaultTableModel tableModelSaboresSelecionados;
-    private ArrayList<Pizza> pizzasDoPedido = new ArrayList<>();
 
-    /**
-     * Creates new form listFlavors
-     */
-    public ListAvaliableFlavors(javax.swing.JPanel lastScreen, String SelectedFormat, Pizzaria sistema, Client selectedClient, String orderArea) {
-        this.SelectedFormat = SelectedFormat;
-        this.orderArea = Double.parseDouble(orderArea);
+    public ListAvaliableFlavours(javax.swing.JPanel lastScreen,
+                                String selectedFormat,
+                                ClientController clientController,
+                                FlavourController flavourController,
+                                OrderController orderController,
+                                PriceTableController priceTableController,
+                                Client selectedClient,
+                                String orderArea) {
+        this.lastScreen = lastScreen;
+        this.selectedFormat = selectedFormat;
+        this.clientController = clientController;
+        this.flavourController = flavourController;
+        this.orderController = orderController;
+        this.priceTableController = priceTableController;
+        this.selectedClient = selectedClient;
+        this.orderArea = Double.parseDouble(orderArea.replace(",", "."));
 
-        switch (SelectedFormat){
+        switch (selectedFormat) {
             case "Círculo":
-                Circle circulo = new Circle(this.orderArea);
-                this.formaInstanciada = circulo;
+                this.formaInstanciada = new Circle(this.orderArea);
                 break;
             case "Triângulo":
-                Triangle triangulo = new Triangle(this.orderArea);
-                this.formaInstanciada = triangulo;
+                this.formaInstanciada = new Triangle(this.orderArea);
                 break;
             case "Quadrado":
-                Square quadrado = new Square(this.orderArea);
-                this.formaInstanciada = quadrado;
+                this.formaInstanciada = new Square(this.orderArea);
                 break;
             default:
                 break;
         }
 
-        this.lastScreen = lastScreen;
-        this.sistema = sistema;
-        this.selectedClient = selectedClient;
-
         initComponents();
 
-        jLabel2.setText("Formato Selecionado: " + SelectedFormat);
+        jLabel2.setText("Formato Selecionado: " + selectedFormat);
         jLabel4.setText("Cliente: " + selectedClient.getName());
         jLabel5.setText("Telefone: " + selectedClient.getTelephone());
         jLabel6.setText("Área cm²: " + String.format("%.2f", this.orderArea));
-        
+
         this.tableModelSabores = (DefaultTableModel) jTable2.getModel();
         this.tableModelSaboresSelecionados = (DefaultTableModel) jTable3.getModel();
         tableModelSaboresSelecionados.setColumnIdentifiers(new String[]{"Sabor Escolhido", "Tipo"});
         tableModelSaboresSelecionados.setNumRows(0);
+
         popularTabelaSabores();
-        atualizarPreçoTotalPedido();
+        atualizarPrecoTotalPedido();
     }
-    
+
     private void popularTabelaSabores() {
         tableModelSabores.setNumRows(0);
-        ArrayList<Flavour> todosSabores = this.sistema.getFlavoursList();
-        PriceTable tabelaPrecos = this.sistema.getPriceTable(); //tabela de preços do sistema
+        this.availableFlavours = this.flavourController.getAllFlavours();
+        PriceTable tabelaPrecos = this.priceTableController.getPriceTable();
 
-        for (Flavour sabor : todosSabores) {
+        for (Flavour sabor : availableFlavours) {
             Pizza pizzaPrevia = new Pizza();
-
-            pizzaPrevia.setForma(this.formaInstanciada); 
-            pizzaPrevia.setFlavours(new Flavour[]{sabor, null}); //apenas 1 sabor para ver o preço
+            pizzaPrevia.setForma(this.formaInstanciada);
+            pizzaPrevia.setFlavours(new Flavour[]{sabor, null});
 
             double precoFinalSabor = pizzaPrevia.getPrice(tabelaPrecos);
 
@@ -98,54 +109,29 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
         }
     }
 
-    private double obterPrecoPorTipo(String tipo) {
-        switch (tipo.toUpperCase()) {
-            case "SIMPLES": return 0.08;
-            case "ESPECIAL": return 0.12;
-            case "PREMIUM": return 0.18;
-            default: return 0.0;
-        }
-    }
-    
-    private double calcularPrecoTotalDasPizzas() {
-        double total = 0;
-        PriceTable tabelaPrecos = this.sistema.getPriceTable();
-        for (Pizza p : pizzasDoPedido) {
-                total += p.getPrice(tabelaPrecos); 
-            }
-            return total;
-        }
-
-        private void atualizarPreçoTotalPedido() {
-            if (saboresSelecionados.isEmpty()) {
+    private void atualizarPrecoTotalPedido() {
+        if (saboresSelecionados.isEmpty()) {
             labelPrecoPedido.setText("Preço total do Pedido: R$ 0,00");
             return;
         }
 
-        // Instancia a única pizza do pedido temporariamente para calcular o preço
         Pizza pizzaAtual = new Pizza();
         pizzaAtual.setForma(this.formaInstanciada);
 
-        // Passa os sabores selecionados (preenche com null se for só 1)
         Flavour[] saboresArray = new Flavour[2];
         for (int i = 0; i < saboresSelecionados.size(); i++) {
             saboresArray[i] = saboresSelecionados.get(i);
         }
         pizzaAtual.setFlavours(saboresArray);
 
-        PriceTable tabelaPrecos = this.sistema.getPriceTable();
-        double total = pizzaAtual.getPrice(tabelaPrecos); 
+        PriceTable tabelaPrecos = this.priceTableController.getPriceTable();
+        double total = pizzaAtual.getPrice(tabelaPrecos);
 
         labelPrecoPedido.setText(String.format("Preço total do Pedido: R$ %.2f", total));
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -342,9 +328,9 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
                 .addComponent(jLabel3)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                        
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {                                         
         if (saboresSelecionados.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Adicione pelo menos 1 sabor à pizza antes de concluir!", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
@@ -353,7 +339,6 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
         int resposta = JOptionPane.showConfirmDialog(this, "Deseja concluir este pedido?", "Confirmar Pedido", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (resposta == JOptionPane.YES_OPTION) {
-            // Monta a pizza final
             Pizza novaPizza = new Pizza();
             novaPizza.setForma(this.formaInstanciada);
 
@@ -363,31 +348,30 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
             }
             novaPizza.setFlavours(saboresArray);
 
-            double valorTotalFinal = novaPizza.getPrice(this.sistema.getPriceTable()); 
-
             ArrayList<Pizza> pizzaUnicaDoPedido = new ArrayList<>();
             pizzaUnicaDoPedido.add(novaPizza);
 
-            this.sistema.newOrder(this.selectedClient, pizzaUnicaDoPedido, valorTotalFinal);
+            boolean created = this.orderController.createOrder(this.selectedClient, pizzaUnicaDoPedido);
 
-            JOptionPane.showMessageDialog(this, "Pedido gravado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            
-            javax.swing.JFrame window = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
-            ListOrders listOrdersWindow = new ListOrders(this, this.sistema);
-            window.setContentPane(listOrdersWindow);
-            window.revalidate();
-            window.repaint();
+            if (created) {
+                javax.swing.JFrame window = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
+                Home homeScreen = new Home(clientController, flavourController, orderController, priceTableController);
+                ListOrders listOrdersWindow = new ListOrders(homeScreen, clientController, flavourController, orderController, priceTableController);
+                window.setContentPane(listOrdersWindow);
+                window.revalidate();
+                window.repaint();
+            }
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }                                        
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {                                         
         javax.swing.JFrame lastWindow = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
         lastWindow.setContentPane(lastScreen);
         lastWindow.revalidate();
         lastWindow.repaint();
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }                                        
 
-    private void btnAdicionarSaborActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdicionarSaborActionPerformed
+    private void btnAdicionarSaborActionPerformed(java.awt.event.ActionEvent evt) {                                                  
         int[] linhasSelecionadas = jTable2.getSelectedRows();
 
         if (linhasSelecionadas.length == 0) {
@@ -400,11 +384,9 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
             return;
         }
 
-        ArrayList<Flavour> todosSabores = this.sistema.getFlavoursList();
-
         for (int i = 0; i < linhasSelecionadas.length; i++) {
             int indexReal = jTable2.convertRowIndexToModel(linhasSelecionadas[i]);
-            Flavour saborEscolhido = todosSabores.get(indexReal);
+            Flavour saborEscolhido = availableFlavours.get(indexReal);
 
             saboresSelecionados.add(saborEscolhido);
 
@@ -414,24 +396,23 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
             });
         }
 
-        atualizarPreçoTotalPedido();
+        atualizarPrecoTotalPedido();
         jTable2.clearSelection();
-    }//GEN-LAST:event_btnAdicionarSaborActionPerformed
+    }                                                 
 
-    private void btnRemoverSaborActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoverSaborActionPerformed
+    private void btnRemoverSaborActionPerformed(java.awt.event.ActionEvent evt) {                                                
         int linhaSelecionada = jTable3.getSelectedRow();
-    
+
         if (linhaSelecionada == -1) {
             JOptionPane.showMessageDialog(this, "Selecione um sabor na tabela de cima para remover.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
         tableModelSaboresSelecionados.removeRow(linhaSelecionada);
         saboresSelecionados.remove(linhaSelecionada);
-        atualizarPreçoTotalPedido();
-    }//GEN-LAST:event_btnRemoverSaborActionPerformed
+        atualizarPrecoTotalPedido();
+    }                                               
 
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     private javax.swing.JButton btnAdicionarSabor;
     private javax.swing.JButton btnRemoverSabor;
     private javax.swing.JButton jButton1;
@@ -454,5 +435,5 @@ public class ListAvaliableFlavors extends javax.swing.JPanel {
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JToolBar jToolBar2;
     private javax.swing.JLabel labelPrecoPedido;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
 }

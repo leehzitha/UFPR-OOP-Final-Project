@@ -11,19 +11,30 @@ import java.util.ArrayList;
  */
 public class Client {
 
+    private Long id;
     private String name;
     private String lastname;
     private String telephone;
-    private ArrayList<Order> orders;
+    private ArrayList<Order> orders = new ArrayList<>();
 
     public Client (String name, String lastname, String telephone) {
         this.name = name;
         this.lastname = lastname;
         this.telephone = telephone;
-        this.orders = new ArrayList<>();
     }
+    
+    public Client(Long id, String name, String lastname, String telephone) {
+        this.id = id;
+        this.name = name;
+        this.lastname = lastname;
+        this.telephone = telephone;
+    }
+ 
 
     //getters e setters
+    public Long getId() {return id;}
+    public void setId(Long id) {this.id = id;}
+
     public String getName() { return name;}
     public void setName(String name) {this.name = name;}
 
@@ -33,8 +44,15 @@ public class Client {
     public String getTelephone() { return telephone;}
     public void setTelephone(String telephone) {this.telephone = telephone;}
 
-    public void newOrder(Order order){
-        orders.add(order);
+    //public void newOrder(Order order){
+    //    orders.add(order);
+    //}
+    
+    public void addOrder(Order order) {
+        if (this.orders == null) {
+            this.orders = new ArrayList<>();
+        }
+        this.orders.add(order);
     }
 
     @Override
